@@ -43,6 +43,7 @@ const createUser = async (req, res) => {
   const password = req.body.password;
   const wm_id = req.body.wm_id;
   const offline_balance = req.body.offline_balance;
+  const local_balance = req.body.local_balance;
 
   const hashedPassword = await bcyrpt.hash(password, 10);
   const user = new User({
@@ -50,6 +51,7 @@ const createUser = async (req, res) => {
     password: hashedPassword,
     wm_id,
     offline_balance,
+    local_balance,
   });
 
   user
@@ -112,6 +114,7 @@ const loginUser = async (req, res) => {
       username: decoded.username,
       wm_id: decoded.wm_id,
       offline_balance: decoded.offline_balance,
+      local_balance: decoded.local_balance,
       id: decoded.id,
     });
   } catch (error) {
@@ -135,5 +138,76 @@ const loginUser = async (req, res) => {
   //       res.status(500).json({ msg: "error" });
   //     });
 };
+//just for updating
+// const updateLocalBalance = async (req, res) => {
+//   const id = req.params.id;
+//   await User.findOneAndUpdate({ _id: id }, req.body, {
+//     new: true,
+//     runValidators: true,
+//   })
+//     .then((result) => {
+//       if (result) {
+//         res.status(200).json({
+//           updated: {
+//             local_balance: result.local_balance,
+//           },
+//         });
+//       } else {
+//         res.status(404).json({
+//           message: "task not found and updated",
+//         });
+//       }
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res.status(500).json({
+//         message: err.message,
+//       });
+//     });
+// };
 
-module.exports = { createUser, loginUser, getUniqueNumber };
+const deductFromLocalBalance = async (req, res) => {
+  const id = req.params.id;
+  const deductionAmount = req.body.deductionAmount; // Assuming the amount to deduct is provided in the request body
+
+  try {
+    const user = await User.findOne({ _id: id });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (user.local_balance < deductionAmount) {
+      return res.status(400).json({
+        message: "Insufficient balance",
+      });
+    }
+
+    // Deduct the specified amount from the local_balance field
+    user.local_balance -= deductionAmount;
+    await user.save();
+
+    res.status(200).json({
+      deductedAmount: deductionAmount,
+      local_balance: user.local_balance,
+    });
+    console.log({
+      deductedAmount: deductionAmount,
+      local_balance: user.local_balance,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+module.exports = {
+  createUser,
+  loginUser,
+  getUniqueNumber,
+  deductFromLocalBalance,
+};

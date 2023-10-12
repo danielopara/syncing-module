@@ -2,6 +2,16 @@ const mongoose = require("mongoose");
 
 const currentTime = Date.now();
 const isoTime = new Date(currentTime).toISOString();
+const uid = () => {
+  let time = Date.now().toString(36).toLocaleUpperCase();
+  let randoms = parseInt(Math.random() * Number.MAX_SAFE_INTEGER);
+  randoms = randoms
+    .toString(36)
+    .slice(0, 12)
+    .padStart(12, "0")
+    .toLocaleUpperCase();
+  return "".concat(time, "-", randoms);
+};
 
 const transactionSchema = new mongoose.Schema({
   username: { type: String, required: true },
@@ -14,7 +24,7 @@ const transactionSchema = new mongoose.Schema({
   receiver_wmId: { type: String, required: true },
   description: { type: String, required: false },
   type: { type: String, required: true },
-  sync_id: { type: String, required: true },
+  sync_id: { type: String, default: uid() },
   sync_time: { type: String, default: isoTime },
   date: { type: Date, required: true },
 });
