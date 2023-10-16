@@ -68,6 +68,7 @@ const syncTransaction = async (req, res) => {
       }
 
       res.status(201).json({
+        success: "Success",
         saved: {
           msg: "saved transactions",
           transactions:
